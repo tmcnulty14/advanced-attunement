@@ -140,7 +140,7 @@ Hooks.on('renderItemSheet5e', (app, html, data) => { // Args?
 
     const attunementGroupQuery = html.find(':has([name="system.attunement"])').last();
     const label = `<label>${game.i18n.localize('ADV-ATTUNE.attunement-weight')}</label>`;
-    const field = `<input type="number" step="any"`
+    const field = `<input type="number" min="0" step="1"`
             + `name="flags.${AdvancedAttunement.ID}.${AdvancedAttunement.FLAGS.ATTUNEMENT_WEIGHT}"`
             + ` value="${attunementWeight}" placeholder="1">`;
     attunementGroupQuery.after(`\n<div class="form-group">${label}${field}</div>`);
@@ -170,8 +170,10 @@ class AdvancedAttunementActorData {
      * Sets this actor's attunement burden.
      **/
     setAttunementBurden(burden) {
+        const sanitizedBurden = Math.max(0, Math.floor(burden));
+
         return this._actor.setFlag(AdvancedAttunement.ID, AdvancedAttunement.FLAGS.ATTUNEMENT_BURDEN,
-                burden);
+                sanitizedBurden);
     }
 
      /**
@@ -233,13 +235,26 @@ class AdvancedAttunementItemData {
      **/
     getAttunementWeight() {
         const weight = this._item.getFlag(AdvancedAttunement.ID, AdvancedAttunement.FLAGS.ATTUNEMENT_WEIGHT);
-        return weight ? weight : AdvancedAttunementItemData.DEFAULT_WEIGHT;
+
+        return AdvancedAttunementItemData.sanitizeWeight(weight);
     }
 
     /**
-     * Sets this item's attunement weight.
+     * Sets this item's attunement weight. (NOT USED RIGHT NOW)
      **/
     setAttunementWeight(weight) {
-        return this._item.setFlag(AdvancedAttunement.ID, AdvancedAttunement.FLAGS.ATTUNEMENT_WEIGHT, weight);
+        const sanitizedWeight = AdvancedAttunementItemData.sanitizeWeight(weight);
+
+        return this._item.setFlag(AdvancedAttunement.ID, AdvancedAttunement.FLAGS.ATTUNEMENT_WEIGHT,
+                sanitizedWeight);
+    }
+
+    /**
+     * Sanitizes a weight value.
+     **/
+    static sanitizeWeight(weight) {
+        return weight === undefined
+                ? AdvancedAttunementItemData.DEFAULT_WEIGHT
+                : Math.max(0, Math.floor(weight));
     }
 }
