@@ -15,12 +15,33 @@ class AdvancedAttunement {
     /**
      * Log helper.
      **/
-    static log(force, ...args) {  
-        const shouldLog = force || game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
+    static log(...args) {  
+        console.log(this.ID, '|', ...args);
+    }
+
+    /**
+     * Log helper.
+     **/
+    static debug(...args) {  
+        const shouldLog = game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
 
         if (shouldLog) {
             console.log(this.ID, '|', ...args);
         }
+    }
+
+    /**
+     * Warning log helper.
+     **/
+    static warn(...args) {
+        console.warn(this.ID, '|', ...args);
+    }
+
+    /**
+     * Error log helper.
+     **/
+    static error(...args) {
+        console.error(this.ID, '|', ...args);
     }
 
     static initialize() {
@@ -80,7 +101,7 @@ Hooks.once('ready', () => {
     for (const actor of AdvancedAttunement.playerCharacters) {
         const attunedItems = [...actor.items.values()].filter(AdvancedAttunement.isAttuned);
 
-        AdvancedAttunement.log(false, `${actor.name} (${actor.id})`, attunedItems.map(item => 
+        AdvancedAttunement.debug(`${actor.name} (${actor.id})`, attunedItems.map(item => 
             `${item.name} (${item.id}): ${item.getFlag(AdvancedAttunement.ID, AdvancedAttunement.FLAGS.ATTUNEMENT_WEIGHT)}`));
     }
 });
@@ -107,13 +128,19 @@ Hooks.on('renderTidy5eSheet', (app, html, data) => {
     const actorData = new AdvancedAttunementActorData(actor);
 
     // Show attunement weight next to attunement icon in inventory tab.
-    const attunableItemIconsQuery = html.find('div.item-state-icon');
+    const attunableItemIconsQuery = html.find('div.item-state-icon').filter('.attuned, .not-attuned');
     attunableItemIconsQuery.each((index, icon) => {
         const itemId = icon.parentElement.getAttribute('data-item-id');
         const itemData = actorData.getItem(itemId);
-        const itemAttunementWeight = itemData.getAttunementWeight();
-        icon.insertAdjacentHTML('afterend',
-            `\n<div class="item-detail item-attunement-weight">${itemAttunementWeight}</div>`);
+        if (itemData) {
+            const itemAttunementWeight = itemData.getAttunementWeight();
+            if (itemAttunementWeight) {
+                icon.insertAdjacentHTML('afterend',
+                    `\n<div class="item-detail item-attunement-weight">${itemAttunementWeight}</div>`);
+            }
+        } else {
+            AdvancedAttunement.warn(`Could not load item ${itemId} from parent actor.`, actor);            
+        }
     });
 
 
@@ -122,6 +149,7 @@ Hooks.on('renderTidy5eSheet', (app, html, data) => {
 
     const attunementDisplayQuery = html.find('[class="attuned-items-current"]');
     attunementDisplayQuery.each((index, attunementDisplay) => {
+        AdvancedAttunement.log(`Displaying attunement burden (${actorAttunementBurden}) on ${actor.name}'s Tidy5eSheet.`);
         attunementDisplay.replaceChildren(`${actorAttunementBurden}`);
     });
 
@@ -186,7 +214,7 @@ class AdvancedAttunementActorData {
                                   .map(itemData => itemData.getAttunementWeight())
                                   .reduce((a, b) => a + b, 0);
         if (newBurden !== currentBurden) {
-            AdvancedAttunement.log(true, `Updating attunement burden of ${this._actor.name}: ${currentBurden} -> ${newBurden}`);
+            AdvancedAttunement.log(`Updating attunement burden of ${this._actor.name}: ${currentBurden} -> ${newBurden}`);
             return this.setAttunementBurden(newBurden);
         }
     }
