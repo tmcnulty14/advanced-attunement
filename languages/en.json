@@ -1,0 +1,6 @@
+{
+  "ADV-ATTUNE": {
+    "attunement-weight": "Attunement Focus Weight",
+    "attunement-weight-info": "The amount of Attunement Focus used by attuning to this item."
+  }
+}
