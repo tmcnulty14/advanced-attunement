@@ -103,6 +103,9 @@ Hooks.once('ready', () => {
 
         AdvancedAttunement.debug(`${actor.name} (${actor.id})`, attunedItems.map(item => 
             `${item.name} (${item.id}): ${item.getFlag(AdvancedAttunement.ID, AdvancedAttunement.FLAGS.ATTUNEMENT_WEIGHT)}`));
+
+
+        // TODO: Set 
     }
 });
 
@@ -128,14 +131,14 @@ Hooks.on('renderTidy5eSheet', (app, html, data) => {
     const actorData = new AdvancedAttunementActorData(actor);
 
     // Show attunement weight next to attunement icon in inventory tab.
-    const attunableItemIconsQuery = html.find('div.item-state-icon').filter('.attuned, .not-attuned');
-    attunableItemIconsQuery.each((index, icon) => {
-        const itemId = icon.parentElement.getAttribute('data-item-id');
+    const attunableItemIconsQuery = html.find('div.item-detail').filter('.attunement');
+    attunableItemIconsQuery.each((index, iconDiv) => {
+        const itemId = iconDiv.parentElement.getAttribute('data-item-id');
         const itemData = actorData.getItem(itemId);
         if (itemData) {
             const itemAttunementWeight = itemData.getAttunementWeight();
             if (itemAttunementWeight) {
-                icon.insertAdjacentHTML('afterend',
+                iconDiv.insertAdjacentHTML('afterbegin',
                     `\n<div class="item-detail item-attunement-weight">${itemAttunementWeight}</div>`);
             }
         } else {
